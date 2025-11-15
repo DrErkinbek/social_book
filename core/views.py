@@ -5,16 +5,29 @@ from django.http import HttpResponse
 from .models import Profile, Post
 from django.contrib.auth.decorators import login_required
 from .models import Profile, Post, LikePost, FollowersCount
-
+from itertools import chain
 # Create your views here.
 @login_required(login_url='signin')
 def index(request):
     user_object = User.objects.get(username=request.user.username)
     user_profile = Profile.objects.get(user=user_object)
 
+    user_following_list = []
+    feed = []
+
+    user_following = FollowersCount.objects.filter(follower=request.user.username)
+
+    for users in user_following:
+        user_following_list.append(users.user)
+
+    for usernames in user_following_list:
+        feed_lists = Post.objects.filter(user=usernames)
+        feed.append(feed_lists)
+
+    feed_list = list(chain(*feed))
     posts = Post.objects.all()
 
-    return render(request, 'index.html', {'user_profile': user_profile, 'posts': posts})
+    return render(request, 'index.html', {'user_profile': user_profile, 'posts': feed_list})
 
 
 @login_required(login_url='signin')
@@ -24,7 +37,7 @@ def upload(request):
         image = request.FILES.get('image_upload')
         caption = request.POST['caption']
 
-        new_post = Post.object.create(user=user, image=image, caption=caption)
+        new_post = Post.objects.create(user=user, image=image, caption=caption)
         new_post.save()
 
         return redirect('/')
@@ -39,12 +52,14 @@ def like_post(request):
     post = Post.objects.get(id=post_id)
 
     like_filter = LikePost.objects.filter(post_id=post_id, username=username).first()
+
     if like_filter == None:
         new_like = LikePost.objects.create(post_id=post_id, username=username)
         new_like.save()
 
         post.no_of_likes = post.no_of_likes+1
         post.save()
+
         return redirect('/')
     else:
         like_filter.delete()
@@ -52,6 +67,7 @@ def like_post(request):
         post.save()
         return redirect('/')
 
+@login_required(login_url='sign-in')
 def profile(request, pk):
     user_object = User.objects.get(username=pk)
     user_profile = Profile.objects.get(user=user_object)
@@ -93,7 +109,8 @@ def follow(request):
             return redirect('/profile/'+user)
         else:
             new_follower = FollowersCount.objects.create(follower=follower, user=user)
-            new_follower.save('/profile/'+user)
+            new_follower.save()
+            return redirect('/profile/'+user)
     else:
         return redirect('/')
 
