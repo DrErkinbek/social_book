@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
 from django.http import HttpResponse
-from .models import Profile, Post
 from django.contrib.auth.decorators import login_required
 from .models import Profile, Post, LikePost, FollowersCount
 from itertools import chain
@@ -27,6 +26,7 @@ def index(request):
         feed.append(feed_lists)
 
     feed_list = list(chain(*feed))
+
     # user suggestions
     all_users = User.objects.all()
     user_following_all = []
@@ -69,13 +69,14 @@ def upload(request):
     else:
         return redirect('/')
 
+@login_required(login_url='signin')
 def search(request):
     user_object = User.objects.get(username=request.user.username)
     user_profile = Profile.objects.get(user=user_object)
 
     if request.method == 'POST':
         username = request.POST['username']
-        username_object = User.objects.filter(username_icontains=username)
+        username_object = User.objects.filter(username__icontains=username)
 
         username_profile = []
         username_profile_list = []
@@ -139,7 +140,7 @@ def profile(request, pk):
         'user_post_length': user_post_length,
         'button_text': button_text,
         'user_followers': user_followers,
-        'user_following': user_following
+        'user_following': user_following,
     }
 
     return render(request, 'profile.html', context)

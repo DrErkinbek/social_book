@@ -80,7 +80,7 @@
 		</section>
 		<section>
 			<div class="bio">
-				{ user_profile.bio }
+				{{ user_profile.bio }}
 			</div>
 		</section>
 		<section>
@@ -97,10 +97,13 @@
 											<ul class="photos">
 												{% for post in user_posts %}
 												<li>
-													<a class="strip" href="{{post.image.url}}" title="" data-strip-group="mygroup" data-strip-group-options="loop: false">
-														<img src="{{post.image.url}}" style="height: 250px; width: 300px;" alt="">
-													</a>
+													{% if post.image %}
+														<img src="{{ post.image.url }}" style="height: 250px; width: 300px;" alt="">
+													{% else %}
+														<img src="{% static 'blank-profile-picture.png' %}" style="height: 250px; width: 300px;" alt="">
+													{% endif %}
 												</li>
+												{% endfor %}
 											</ul>
 										</div>
 									</div>
@@ -114,7 +117,8 @@
 			</div>
 		</section>
 
-	<script data-cfasync="false" src="{% static '../../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js' %}"></script><script src="{% static js/main.min.js %}"></script>
+	<script data-cfasync="false" src="{% static '../../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js' %}"></script>
+	<script src="{% static 'js/main.min.js' %}"></script>
 	<script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>
